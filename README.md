@@ -51,7 +51,7 @@ alternatives, for messages sent with such alternatives:
 
 Most of the script's output should be self-explanatory.  Most fields are
 optional, so it'll only print information (from event end times to
-locations to event descriptions) is they're present in the original data.
+locations to event descriptions) if they're present in the original data.
 
 One thing to note is the encoding of attendees (or, in iCalendar
 terminology, "participants").  They're presented in a list with a checkbox
