@@ -47,6 +47,67 @@ alternatives, for messages sent with such alternatives:
 
     alternative_order text/calendar text/plain text/html
 
+### Output
+
+Most of the script's output should be self-explanatory.  Most fields are
+optional, so it'll only print information (from event end times to
+locations to event descriptions) is they're present in the original data.
+
+One thing to note is the encoding of attendees (or, in iCalendar
+terminology, "participants").  They're presented in a list with a checkbox
+of sorts next to them, something like this:
+
+    [ ] Barb Example <barb@example.com>
+
+People will get different boxes depending on the role defined for them in
+the iCalendar data.  The boxes are as follows:
+
+* `{ }` - Event chairperson.
+* `[ ]` - Attendee, participation required.  (Most programs use this as
+          the default role.)
+* `< >` - Attendee, participation optional.
+* `( )` - Non-participant.  (The author of these scripts has never seen
+          this in actual use.)
+* `_ _` - No role defined in the data.
+* `? ?` - Unknown role.
+
+The script places text in the box to indicate the status of the person.
+The statuses are as follows:
+
+* blank - Unknown.  (Officially, this is "needs action", i.e. "waiting for
+          a response".)
+* `Y` - Attending.
+* `-` - Not attending.
+* `~` - Maybe attending.
+* `?` - Status not recognized by script.
+
+(In the event that the iCalendar data does not define a status, the box
+will be empty, not just blank.  This is "status unknown to organizer":
+`[ ]`.  This is "status not present in data": `[]`.  That's not a hug
+difference, but every file the script's author has observed has had some
+status defined for every person attached to an event.)
+
+#### Example
+
+Here's an event with a chairperson, two required attendees, and two
+non-required attendees.  The chairperson and one required attendee have
+responded that they will attend.  The other required attendee has not yet
+responded.  One of the non-required attendees will not attend and the
+other is tentative.
+
+    Organizer: Admin Aid <admin@example.com>
+    Event:     Example Event
+    Date:      Thursday, August 4, 2016
+    Starts:    9:00 am
+    Ends:      10:00 am
+    Location:  Meeting Room 7
+    Attendees: {Y} Important Executive <exec@example.com>
+               [Y] Relevant Manager <mgr@example.com>
+               [ ] Relevant Subordinate <worker@example.com>
+               <-> Affiliated Manager <aff@example.com>
+               <~> Irrelevant Manager <irr@example.com>
+
+
 ical-reply
 ----------
 
