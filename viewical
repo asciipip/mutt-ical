@@ -9,7 +9,7 @@ import sys
 
 import icalendar  # https://pypi.python.org/pypi/icalendar
 import pytz       # https://pypi.python.org/pypi/pytz
-import tzlocal    # https://pypi.python.org/pypi/pytz
+import tzlocal    # https://pypi.python.org/pypi/tzlocal
 
 # Get local timezone.  Use TZ environment variable if present, otherwise use
 # the tzlocal module to figure it out.
@@ -129,37 +129,40 @@ for event in cal.subcomponents:
         if 'ORGANIZER' in event:
             print("Organizer: %s" % format_person(event['ORGANIZER']))
         if 'SUMMARY' in event:
-            print("Event:     %s" % event['SUMMARY'])
+            print("Event:     %s" % event['SUMMARY'].encode('utf-8'))
+        elif 'UID' in event:
+            print('UID:       %s' % event['UID'])
 
-        dtstart = event['DTSTART'].dt
-        dtend = get_dtend(event)
-        if isinstance(dtstart, datetime.datetime):
-            # We have time information.
-            if dtend:
-                # We have an end date and time.
-                if dtstart.date() == dtend.date():
-                    # Start end end times are on the same day.
-                    # This is a common occurence, so let's format things in a
-                    # friendly way.
-                    print("Date:      %s" % format_date(dtstart))
-                    print("Starts:    %s" % format_time(dtstart))
-                    print("Ends:      %s" % format_time(dtend))
+        if 'DTSTART' in event:
+            dtstart = event['DTSTART'].dt
+            dtend = get_dtend(event)
+            if isinstance(dtstart, datetime.datetime):
+                # We have time information.
+                if dtend:
+                    # We have an end date and time.
+                    if dtstart.date() == dtend.date():
+                        # Start end end times are on the same day.
+                        # This is a common occurence, so let's format things in a
+                        # friendly way.
+                        print("Date:      %s" % format_date(dtstart))
+                        print("Starts:    %s" % format_time(dtstart))
+                        print("Ends:      %s" % format_time(dtend))
+                    else:
+                        # Start and end times are on different days.
+                        print("Starts:    %s" % format_datetime(dtstart))
+                        print("Ends:      %s" % format_datetime(dtend))
                 else:
-                    # Start and end times are on different days.
+                    # No end date/time.
                     print("Starts:    %s" % format_datetime(dtstart))
-                    print("Ends:      %s" % format_datetime(dtend))
             else:
-                # No end date/time.
-                print("Starts:    %s" % format_datetime(dtstart))
-        else:
-            # We have no time information.
-            if dtend and dtstart != dtend:
-                # There's an end date and it's different from the start date.
-                print("Starts:    %s" % format_date(dtstart))
-                print("Ends:      %s" % format_date(dtend))
-            else:
-                # Either starts and ends on the same day or there's no end date.
-                print("Date:      %s" % format_date(dtstart))
+                # We have no time information.
+                if dtend and dtstart != dtend:
+                    # There's an end date and it's different from the start date.
+                    print("Starts:    %s" % format_date(dtstart))
+                    print("Ends:      %s" % format_date(dtend))
+                else:
+                    # Either starts and ends on the same day or there's no end date.
+                    print("Date:      %s" % format_date(dtstart))
 
         if 'LOCATION' in event:
             print("Location:  %s" % event['LOCATION'])
@@ -172,8 +175,9 @@ for event in cal.subcomponents:
                     print("           %s" % format_person(attendee))
             else:
                 print("Attendee:  %s" % format_person(event['ATTENDEE']))
-        print("Description:")
-        # If the encode() call isn't there, print() will choke on anything that
-        # isn't ASCII.
-        print(event['DESCRIPTION'].encode('utf-8'))
+        if 'DESCRIPTION' in event:
+            print("Description:")
+            # If the encode() call isn't there, print() will choke on anything that
+            # isn't ASCII.
+            print(event['DESCRIPTION'].encode('utf-8'))
         print()
