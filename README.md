@@ -40,7 +40,12 @@ In your `.muttrc`, tell mutt to automatically display calendar data:
 
     auto_view text/calendar
     auto_view application/ics
-    
+
+Finally, you need to add (or modify) the `alternative_order` setting in
+your `.muttrc` to prefer iCalendar attachments over their HTML or text
+alternatives, for messages sent with such alternatives:
+
+    alternative_order text/calendar text/plain text/html
 
 ical-reply
 ----------
