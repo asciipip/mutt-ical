@@ -83,7 +83,7 @@ The statuses are as follows:
 
 (In the event that the iCalendar data does not define a status, the box
 will be empty, not just blank.  This is "status unknown to organizer":
-`[ ]`.  This is "status not present in data": `[]`.  That's not a hug
+`[ ]`.  This is "status not present in data": `[]`.  That's not a huge
 difference, but every file the script's author has observed has had some
 status defined for every person attached to an event.)
 
