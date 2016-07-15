@@ -1,0 +1,168 @@
+#!/usr/bin/env python
+
+from __future__ import print_function
+
+import datetime
+import email
+import email.utils
+import optparse
+import os
+import re
+import smtplib
+import sys
+
+import icalendar  # https://pypi.python.org/pypi/icalendar
+
+from email.mime.text import MIMEText
+
+
+ICALENDAR_PRODID = '-//net.aperiodic.mutt-ical//1.0'
+ICALENDAR_CONTENT_TYPES = ['text/calendar', 'application/ics']
+ICALENDAR_REPLY_STATUSES = {
+    'yes': 'ACCEPTED',
+    'no': 'DECLINED',
+    'maybe': 'TENTATIVE',
+}
+
+parser = optparse.OptionParser(usage='Usage: %prog [opts] {-r <response> | --refresh} email-address')
+parser.add_option('-r', '--reply', type='choice',
+                  choices=ICALENDAR_REPLY_STATUSES.keys(),
+                  help='Give your reply to a request for attendance.')
+parser.add_option('--refresh', action='store_true',
+                  help='Request an updated copy of the given event.')
+parser.add_option('-d', '--debug', action='store_true',
+                  help='Enable debugging; do not actually send email.')
+parser.add_option('-s', '--smtp', default='localhost',
+                  help='SMTP server to use when sending email.  Defaults to localhost.')
+
+(options, args) = parser.parse_args()
+if not (options.reply or options.refresh):
+    print('You must specify an action.', file=sys.stderr)
+    exit(1)
+if options.reply and options.refresh:
+    print('You annot give more than one action.', file=sys.stderr)
+    exit(1)
+if len(args) == 0:
+    print('You must give your email address.', file=sys.stderr)
+    exit(1)
+if len(args) > 1:
+    print('You can only give one email address.', file=sys.stderr)
+    exit(1)
+email_address = 'mailto:' + args[0]
+
+def copy_prop(prop, source, dest):
+    if prop in source:
+        dest.add(prop, source[prop])
+
+def find_icalendar(email):
+    global ICALENDAR_CONTENT_TYPES
+    for part in email.walk():
+        if part.get_content_type() in ICALENDAR_CONTENT_TYPES:
+            return part
+    return None
+
+
+###
+# Find the iCalendar in the source email and parse it.
+
+source_email = email.message_from_file(sys.stdin)
+source_icalendar = find_icalendar(source_email)
+if not source_email:
+    print('No iCalendar found to reply to.', file=sys.stderr)
+    exit(1)
+request = icalendar.Calendar.from_ical(source_icalendar.get_payload(decode=True))
+
+
+###
+# Verification of the validity of the requestion action relative to the supplied
+# iCalendar.
+
+if options.reply and not ('METHOD' in request and request['METHOD'] == 'REQUEST'):
+    print('Cannot generate reply; source calendar was not a REQUEST.',
+          file=sys.stderr)
+    exit(1)
+
+source_event = None
+for component in request.subcomponents:
+    if component.name == 'VEVENT':
+        if source_event:
+            print('Cannot generate reply; more than one event in source calendar.',
+                  file=sys.stderr)
+            exit(1)
+        source_event = component
+if not source_event:
+    print('Cannot generate reply; no events in source calendar.',
+          file=sys.stderr)
+    exit(1)
+
+attendee = None
+if isinstance(source_event['ATTENDEE'], list):
+    for a in source_event['ATTENDEE']:
+        if a.lower() == email_address.lower():
+            attendee = a
+elif source_event['ATTENDEE'].lower() == email_address.lower():
+    attendee = source_event['ATTENDEE']
+if not attendee:
+    print('Email "%s" is not listed as an attendee.' % email_address.replace('mailto:', ''),
+          file=sys.stderr)
+    exit(1)
+
+###
+# Build response calendar.
+
+response_icalendar = icalendar.Calendar()
+if options.reply:
+    response_icalendar['METHOD'] = 'REPLY'
+elif options.refresh:
+    response_icalendar['METHOD'] = 'REFRESH'
+response_icalendar['VERSION'] = '2.0'
+response_icalendar['PRODID'] = ICALENDAR_PRODID
+response_icalendar['CALSCALE'] = 'GREGORIAN'
+
+reply_event = icalendar.Event()
+reply_event['ATTENDEE'] = attendee
+if options.reply:
+    reply_event['ATTENDEE'].params['PARTSTAT'] = ICALENDAR_REPLY_STATUSES[options.reply]
+    reply_event['ATTENDEE'].params['X-NUM-GUESTS'] = '1'
+reply_event.add('DTSTAMP', datetime.datetime.now())
+copy_prop('ORGANIZER', source_event, reply_event)
+copy_prop('RECURRENCE-ID', source_event, reply_event)
+copy_prop('UID', source_event, reply_event)
+if options.reply:
+    copy_prop('SEQUENCE', source_event, reply_event)
+
+response_icalendar.add_component(reply_event)
+
+###
+# Build response email.
+
+response_email = MIMEText(response_icalendar.to_ical(), 'calendar')#, 'UTF-8')
+response_email.set_param('method', response_icalendar['METHOD'])
+response_email['From'] = email_address.replace('mailto:', '')
+organizer_address = source_event['ORGANIZER'].replace('mailto:', '')
+organizer_address = source_event['ORGANIZER'].replace('Mailto:', '')
+organizer_address = source_event['ORGANIZER'].replace('MAILTO:', '')
+if 'CN' in source_event['ORGANIZER'].params:
+    reply_to = email.utils.formataddr((source_event['ORGANIZER'].params['CN'], organizer_address))
+else:
+    reply_to = organizer_address
+response_email['To'] = reply_to
+
+if 'SUMMARY' in source_event:
+    response_email['Subject'] = 'Re: ' + source_event['SUMMARY']
+else:
+    response_email['Subject'] = 'Re: ' + source_event['UID']
+response_email['Date'] = email.utils.formatdate(localtime=True)
+
+if options.debug:
+    print(response_email.as_string(), end='')
+else:
+    parsed_reply_to = email.utils.parseaddr(reply_to)
+    if parsed_reply_to == ('', ''):
+        destination = reply_to
+    else:
+        destination = parsed_reply_to[1]
+    s = smtplib.SMTP(options.smtp)
+    s.sendmail(email_address.replace('mailto:', ''), [destination],
+               response_email.as_string())
+    s.quit()

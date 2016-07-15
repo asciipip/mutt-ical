@@ -41,3 +41,9 @@ In your `.muttrc`, tell mutt to automatically display calendar data:
     auto_view text/calendar
     auto_view application/ics
     
+
+ical-reply
+----------
+
+`ical-reply` is intended to facilitate responses to iCalendar emails.
+It's not ready for use yet.
