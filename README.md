@@ -2,7 +2,7 @@ mutt-ical
 =========
 
 This is a collection of scripts that make it easier to work with
-[iCalendar][] files in [mutt][].  (Note that its is for calendar
+[iCalendar][] files in [mutt][].  (Note that this is for calendar
 information in the iCalendar *file format*.  It has nothing to do with the
 OSX calendar program.)
 
