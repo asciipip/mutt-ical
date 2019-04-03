@@ -195,6 +195,8 @@ for event in cal.subcomponents:
             params = [x for x in [freq, count, until] if (x and len(x) > 0)]
             print("Recurs:    %s" % ' '.join(params))
 
+        if 'URL' in event:
+            print("URL:       %s" % event['URL'])
         if 'LOCATION' in event:
             print("Location:  %s" % event['LOCATION'])
         if 'CONTACT' in event:
