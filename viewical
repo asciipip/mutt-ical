@@ -9,6 +9,10 @@ import icalendar  # https://pypi.python.org/pypi/icalendar
 import pytz       # https://pypi.python.org/pypi/pytz
 import tzlocal    # https://pypi.python.org/pypi/tzlocal
 
+TIME_FORMAT = '%-I:%M %P'
+DATE_FORMAT = '%A, %B %-d, %Y'
+DATETIME_FORMAT = "%s %s" % (DATE_FORMAT , TIME_FORMAT)
+
 # Get local timezone.  Use TZ environment variable if present, otherwise use
 # the tzlocal module to figure it out.
 if 'TZ' in os.environ:
@@ -34,7 +38,7 @@ def localize(dt):
 
 def format_time(dt):
     dtlocal = localize(dt)
-    fmt = dtlocal.strftime('%-I:%M %P')
+    fmt = dtlocal.strftime(TIME_FORMAT)
     if fmt == '12:00 pm':
         return 'noon'
     elif fmt == '12:00 am':
@@ -47,11 +51,11 @@ def format_date(dt):
         dtlocal = localize(dt)
     else:
         dtlocal = dt
-    return dtlocal.strftime('%A, %B %-d, %Y')
+    return dtlocal.strftime(DATE_FORMAT)
 
 def format_datetime(dt):
     dtlocal = localize(dt)
-    return dtlocal.strftime('%A, %B %-d, %Y, %-I:%M %P')
+    return dtlocal.strftime(DATETIME_FORMAT)
 
 def format_person(person):
     if 'ROLE' in person.params:
