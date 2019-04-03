@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-
-from __future__ import print_function
+#!/usr/bin/env python3
 
 import datetime
 import os
@@ -129,7 +127,7 @@ for event in cal.subcomponents:
         if 'ORGANIZER' in event:
             print("Organizer: %s" % format_person(event['ORGANIZER']))
         if 'SUMMARY' in event:
-            print("Event:     %s" % event['SUMMARY'].encode('utf-8'))
+            print("Event:     %s" % event['SUMMARY'])
         elif 'UID' in event:
             print('UID:       %s' % event['UID'])
 
@@ -179,5 +177,5 @@ for event in cal.subcomponents:
             print("Description:")
             # If the encode() call isn't there, print() will choke on anything that
             # isn't ASCII.
-            print(event['DESCRIPTION'].encode('utf-8'))
+            print(event['DESCRIPTION'])
         print()
