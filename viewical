@@ -13,6 +13,16 @@ TIME_FORMAT = '%-I:%M %P'
 DATE_FORMAT = '%A, %B %-d, %Y'
 DATETIME_FORMAT = "%s %s" % (DATE_FORMAT , TIME_FORMAT)
 
+FREQ_UNITS = {
+    'SECONDLY': 'second',
+    'MINUTELY': 'minute',
+    'HOURLY': 'hour',
+    'DAILY': 'day',
+    'WEEKLY': 'week',
+    'MONTHLY': 'month',
+    'YEARLY': 'year',
+}
+
 # Get local timezone.  Use TZ environment variable if present, otherwise use
 # the tzlocal module to figure it out.
 if 'TZ' in os.environ:
@@ -173,24 +183,40 @@ for event in cal.subcomponents:
             count = ""
             until = ""
 
-            if 'INTERVAL' in rrule.params:
-                if rrule['INTERVAL'] == "1":
-                    interval = ""
-                elif rrule['INTERVAL'][-1] == "1":
-                    interval = " %sst" % rrule['INTERVAL']
-                elif rrule['INTERVAL'][-1] == "2":
-                    interval = " %snd" % rrule['INTERVAL']
-                elif rrule['INTERVAL'][-1] == "3":
-                    interval = " %srd" % rrule['INTERVAL']
-                else:
-                    interval = " %sth" % rrule['INTERVAL']
+            if 'INTERVAL' in rrule:
+                try:
+                    interval_num = int(rrule['INTERVAL'][0])
+                    if interval_num == 1:
+                        interval = ''
+                    elif interval_num == 2:
+                        interval = 'other '
+                    elif interval_num // 10 % 10 == 1:
+                        interval = '%dth ' % interval_num
+                    elif interval_num % 10 == 2:
+                        interval = '%dnd ' % interval_num
+                    elif interval_num % 10 == 3:
+                        interval = '%drd ' % interval_num
+                    else:
+                        interval = '%dth ' % interval_num
+                except ValueError:
+                    interval = rrule['INTERVAL'][0]
             if 'FREQ' in rrule:
-                timeframe = rrule['FREQ'][0].lower()[0:-2]  # 'WEEKLY' -> 'week'
-                freq = "every %s%s" % (interval, timeframe)
+                if rrule['FREQ'][0] in FREQ_UNITS:
+                    freq_unit = FREQ_UNITS[rrule['FREQ'][0]]
+                    freq = 'Every %s%s' % (interval, freq_unit)
+                else:
+                    freq_unit = rrule['FREQ'][0][:-2].lower()
+                    freq = '%s, with an interval of %s' % (rrule['FREQ'][0], rrule['INTERVAL'])
+            else:
+                freq_unit = 'interval'
+                freq = 'Every <unknown interval>'
             if 'COUNT' in rrule:
-                count = "%s times" % rrule['COUNT'][0]
+                count = 'for %s %s' % (rrule['COUNT'][0], freq_unit + 's')
             if 'UNTIL' in rrule:
-                until = "until %s" % format_datetime(rrule['UNTIL'][0])
+                if isinstance(rrule['UNTIL'][0], datetime.datetime):
+                    until = "until %s" % format_datetime(rrule['UNTIL'][0])
+                else:
+                    until = "until %s" % format_date(rrule['UNTIL'][0])
 
             params = [x for x in [freq, count, until] if (x and len(x) > 0)]
             print("Recurs:    %s" % ' '.join(params))
