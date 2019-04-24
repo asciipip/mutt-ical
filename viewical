@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-
-from __future__ import print_function
+#!/usr/bin/env python3
 
 import datetime
 import os
@@ -10,6 +8,10 @@ import sys
 import icalendar  # https://pypi.python.org/pypi/icalendar
 import pytz       # https://pypi.python.org/pypi/pytz
 import tzlocal    # https://pypi.python.org/pypi/tzlocal
+
+TIME_FORMAT = '%-I:%M %P'
+DATE_FORMAT = '%A, %B %-d, %Y'
+DATETIME_FORMAT = "%s %s" % (DATE_FORMAT , TIME_FORMAT)
 
 # Get local timezone.  Use TZ environment variable if present, otherwise use
 # the tzlocal module to figure it out.
@@ -36,7 +38,7 @@ def localize(dt):
 
 def format_time(dt):
     dtlocal = localize(dt)
-    fmt = dtlocal.strftime('%-I:%M %P')
+    fmt = dtlocal.strftime(TIME_FORMAT)
     if fmt == '12:00 pm':
         return 'noon'
     elif fmt == '12:00 am':
@@ -49,11 +51,11 @@ def format_date(dt):
         dtlocal = localize(dt)
     else:
         dtlocal = dt
-    return dtlocal.strftime('%A, %B %-d, %Y')
+    return dtlocal.strftime(DATE_FORMAT)
 
 def format_datetime(dt):
     dtlocal = localize(dt)
-    return dtlocal.strftime('%A, %B %-d, %Y, %-I:%M %P')
+    return dtlocal.strftime(DATETIME_FORMAT)
 
 def format_person(person):
     if 'ROLE' in person.params:
@@ -129,7 +131,7 @@ for event in cal.subcomponents:
         if 'ORGANIZER' in event:
             print("Organizer: %s" % format_person(event['ORGANIZER']))
         if 'SUMMARY' in event:
-            print("Event:     %s" % event['SUMMARY'].encode('utf-8'))
+            print("Event:     %s" % event['SUMMARY'])
         elif 'UID' in event:
             print('UID:       %s' % event['UID'])
 
@@ -164,6 +166,37 @@ for event in cal.subcomponents:
                     # Either starts and ends on the same day or there's no end date.
                     print("Date:      %s" % format_date(dtstart))
 
+        if 'RRULE' in event:
+            rrule = event['RRULE']
+            interval = ""
+            freq = ""
+            count = ""
+            until = ""
+
+            if 'INTERVAL' in rrule.params:
+                if rrule['INTERVAL'] == "1":
+                    interval = ""
+                elif rrule['INTERVAL'][-1] == "1":
+                    interval = " %sst" % rrule['INTERVAL']
+                elif rrule['INTERVAL'][-1] == "2":
+                    interval = " %snd" % rrule['INTERVAL']
+                elif rrule['INTERVAL'][-1] == "3":
+                    interval = " %srd" % rrule['INTERVAL']
+                else:
+                    interval = " %sth" % rrule['INTERVAL']
+            if 'FREQ' in rrule:
+                timeframe = rrule['FREQ'][0].lower()[0:-2]  # 'WEEKLY' -> 'week'
+                freq = "every %s%s" % (interval, timeframe)
+            if 'COUNT' in rrule:
+                count = "%s times" % rrule['COUNT'][0]
+            if 'UNTIL' in rrule:
+                until = "until %s" % format_datetime(rrule['UNTIL'][0])
+
+            params = [x for x in [freq, count, until] if (x and len(x) > 0)]
+            print("Recurs:    %s" % ' '.join(params))
+
+        if 'URL' in event:
+            print("URL:       %s" % event['URL'])
         if 'LOCATION' in event:
             print("Location:  %s" % event['LOCATION'])
         if 'CONTACT' in event:
@@ -179,5 +212,5 @@ for event in cal.subcomponents:
             print("Description:")
             # If the encode() call isn't there, print() will choke on anything that
             # isn't ASCII.
-            print(event['DESCRIPTION'].encode('utf-8'))
+            print(event['DESCRIPTION'])
         print()
