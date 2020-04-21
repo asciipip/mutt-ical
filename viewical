@@ -22,6 +22,15 @@ FREQ_UNITS = {
     'MONTHLY': 'month',
     'YEARLY': 'year',
 }
+DAY_NAMES = {
+    'SU': 'Sunday',
+    'MO': 'Monday',
+    'TU': 'Tuesday',
+    'WE': 'Wednesday',
+    'TH': 'Thursday',
+    'FR': 'Friday',
+    'SA': 'Saturday',
+}
 
 # Get local timezone.  Use TZ environment variable if present, otherwise use
 # the tzlocal module to figure it out.
@@ -180,6 +189,7 @@ for event in cal.subcomponents:
             rrule = event['RRULE']
             interval = ""
             freq = ""
+            days = ""
             count = ""
             until = ""
 
@@ -210,6 +220,13 @@ for event in cal.subcomponents:
             else:
                 freq_unit = 'interval'
                 freq = 'Every <unknown interval>'
+            if 'BYDAY' in rrule:
+                if len(rrule['BYDAY']) == 1:
+                    days = 'on %s' % DAY_NAMES[rrule['BYDAY'][0]]
+                elif len(rrule['BYDAY']) == 2:
+                    days = 'on %s and %s' % (DAY_NAMES[rrule['BYDAY'][0]], DAY_NAMES[rrule['BYDAY'][1]])
+                elif len(rrule['BYDAY']) >= 3:
+                    days = 'on %s, and %s' % (', '.join(DAY_NAMES[d] for d in rrule['BYDAY'][:-1]), DAY_NAMES[rrule['BYDAY'][-1]])
             if 'COUNT' in rrule:
                 count = 'for %s %s' % (rrule['COUNT'][0], freq_unit + 's')
             if 'UNTIL' in rrule:
@@ -218,7 +235,7 @@ for event in cal.subcomponents:
                 else:
                     until = "until %s" % format_date(rrule['UNTIL'][0])
 
-            params = [x for x in [freq, count, until] if (x and len(x) > 0)]
+            params = [x for x in [freq, days, count, until] if (x and len(x) > 0)]
             print("Recurs:    %s" % ' '.join(params))
 
         if 'URL' in event:
