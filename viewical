@@ -40,6 +40,26 @@ else:
     tz = tzlocal.get_localzone()
 
 
+def ordinal(integer):
+    """Converts an integer (e.g. "5") into an ordinal (e.g. "5th")."""
+    # *Most* suffixes are based on the last digit of the number:
+    #  * 1st
+    #  * 2nd
+    #  * 3rd
+    #  * 0th, 4th–9th
+    # The three exceptions are: 11th, 12th, 13th
+    # other digits (hundreds, ten hundreds, etc.) don't make a difference.
+    if integer // 10 % 10 == 1:
+        return '{}th'.format(integer)
+    elif integer % 10 == 1:
+        return '{}st'.format(integer)
+    elif integer % 10 == 2:
+        return '{}nd'.format(integer)
+    elif integer % 10 == 3:
+        return '{}rd'.format(integer)
+    else:
+        return '{}th'.format(integer)
+                
 def get_dtend(event):
     if 'DTEND' in event:
         return event['DTEND'].dt
@@ -120,6 +140,23 @@ def format_person(person):
         display_name = email_address
     return display_status + display_name
 
+def format_recur_byday(weekdaynum):
+    match = re.search(r'^([+-]?)(\d*)(..)$', weekdaynum)
+    if match is None or match.group(3) not in DAY_NAMES:
+        return '[ERROR: failed to parse "BYDAY={}"]'.format(weekdaynum)
+    day = DAY_NAMES[match.group(3)]
+    if match.group(2) is None:
+        return day
+    if match.group(1) is None:
+        sign = '+'
+    else:
+        sign = match.group(1)
+    nth = ordinal(int(match.group(2)))
+    # FIXME: There should be a better way of wording negative numbers
+    if sign == '-':
+        nth = '-' + nth
+    return 'the {} {}'.format(nth, day)
+        
 
 cal = icalendar.Calendar.from_ical(sys.stdin.read())
 if 'METHOD' in cal:
@@ -200,14 +237,8 @@ for event in cal.subcomponents:
                         interval = ''
                     elif interval_num == 2:
                         interval = 'other '
-                    elif interval_num // 10 % 10 == 1:
-                        interval = '%dth ' % interval_num
-                    elif interval_num % 10 == 2:
-                        interval = '%dnd ' % interval_num
-                    elif interval_num % 10 == 3:
-                        interval = '%drd ' % interval_num
                     else:
-                        interval = '%dth ' % interval_num
+                        interval = ordinal(interval_num) + ' '
                 except ValueError:
                     interval = rrule['INTERVAL'][0]
             if 'FREQ' in rrule:
@@ -222,11 +253,11 @@ for event in cal.subcomponents:
                 freq = 'Every <unknown interval>'
             if 'BYDAY' in rrule:
                 if len(rrule['BYDAY']) == 1:
-                    days = 'on %s' % DAY_NAMES[rrule['BYDAY'][0]]
+                    days = 'on %s' % format_recur_byday(rrule['BYDAY'][0])
                 elif len(rrule['BYDAY']) == 2:
-                    days = 'on %s and %s' % (DAY_NAMES[rrule['BYDAY'][0]], DAY_NAMES[rrule['BYDAY'][1]])
+                    days = 'on %s and %s' % (format_recur_byday(rrule['BYDAY'][0]), format_recur_byday(rrule['BYDAY'][1]))
                 elif len(rrule['BYDAY']) >= 3:
-                    days = 'on %s, and %s' % (', '.join(DAY_NAMES[d] for d in rrule['BYDAY'][:-1]), DAY_NAMES[rrule['BYDAY'][-1]])
+                    days = 'on %s, and %s' % (', '.join(format_recur_byday(d) for d in rrule['BYDAY'][:-1]), format_recur_byday(rrule['BYDAY'][-1]))
             if 'COUNT' in rrule:
                 count = 'for %s %s' % (rrule['COUNT'][0], freq_unit + 's')
             if 'UNTIL' in rrule:
