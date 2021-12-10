@@ -145,9 +145,9 @@ def format_recur_byday(weekdaynum):
     if match is None or match.group(3) not in DAY_NAMES:
         return '[ERROR: failed to parse "BYDAY={}"]'.format(weekdaynum)
     day = DAY_NAMES[match.group(3)]
-    if match.group(2) is None:
+    if match.group(2) is None or match.group(2) == "":
         return day
-    if match.group(1) is None:
+    if match.group(1) is None or match.group(1) == "":
         sign = '+'
     else:
         sign = match.group(1)
