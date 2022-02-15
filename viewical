@@ -308,12 +308,6 @@ def handle_event_vevent(event):
         # If the encode() call isn't there, print() will choke on anything that
         # isn't ASCII.
         print(event['DESCRIPTION'])
-
-    if 'COMMENT' in event:
-        print()
-        print("Comment:")
-        print(event['COMMENT'])
-
     print()
 
 
