@@ -250,13 +250,15 @@ def handle_event_rrule(event):
         if len(rrule['BYDAY']) == 1:
             days = 'on %s' % format_recur_byday(rrule['BYDAY'][0])
         elif len(rrule['BYDAY']) == 2:
-            days = 'on %s and %s' % (
+            days = 'on {} and {}'.format(
                 format_recur_byday(rrule['BYDAY'][0]),
-                format_recur_byday(rrule['BYDAY'][1])
+                format_recur_byday(rrule['BYDAY'][1]),
             )
         elif len(rrule['BYDAY']) >= 3:
-            days = 'on %s, and %s' % (', '.join(format_recur_byday(d) for d in rrule['BYDAY'][:-1]),
-                                      format_recur_byday(rrule['BYDAY'][-1]))
+            days = 'on {}, and {}'.format(
+                ', '.join(format_recur_byday(d) for d in rrule['BYDAY'][:-1]),
+                format_recur_byday(rrule['BYDAY'][-1]),
+            )
     if 'COUNT' in rrule:
         count = 'for %s %s' % (rrule['COUNT'][0], freq_unit + 's')
     if 'UNTIL' in rrule:
