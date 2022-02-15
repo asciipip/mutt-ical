@@ -185,7 +185,7 @@ def print_method(method):
     print()
 
 
-def handle_event_dtstart(event):
+def handle_event_component_dtstart(event):
     dtstart = event['DTSTART'].dt
     dtend = get_dtend(event)
     if isinstance(dtstart, datetime.datetime):
@@ -217,7 +217,7 @@ def handle_event_dtstart(event):
             print("Date:      %s" % format_date(dtstart))
 
 
-def handle_event_rrule(event):
+def handle_event_component_rrule(event):
     rrule = event['RRULE']
     interval = ""
     freq = ""
@@ -271,6 +271,52 @@ def handle_event_rrule(event):
     print("Recurs:    %s" % ' '.join(params))
 
 
+def handle_event_vevent(event):
+    if 'CLASS' in event and event['CLASS'] != 'PUBLIC':
+        print("Classification: %s" % event['CLASS'])
+    if 'STATUS' in event and event['STATUS'] != 'CONFIRMED':
+        print("Status:    %s" % event['STATUS'])
+    if 'ORGANIZER' in event:
+        print("Organizer: %s" % format_person(event['ORGANIZER']))
+
+    if 'SUMMARY' in event:
+        print("Event:     %s" % event['SUMMARY'])
+    elif 'UID' in event:
+        print('UID:       %s' % event['UID'])
+
+    if 'DTSTART' in event:
+        handle_event_component_dtstart(event)
+    if 'RRULE' in event:
+        handle_event_component_rrule(event)
+    if 'URL' in event:
+        print("URL:       %s" % event['URL'])
+    if 'LOCATION' in event:
+        print("Location:  %s" % event['LOCATION'])
+    if 'CONTACT' in event:
+        print("Contact:   %s" % event['CONTACT'])
+
+    if 'ATTENDEE' in event:
+        if isinstance(event['ATTENDEE'], list):
+            print("Attendees: %s" % format_person(event['ATTENDEE'][0]))
+            for attendee in event['ATTENDEE'][1:]:
+                print("           %s" % format_person(attendee))
+        else:
+            print("Attendee:  %s" % format_person(event['ATTENDEE']))
+
+    if 'DESCRIPTION' in event:
+        print("Description:")
+        # If the encode() call isn't there, print() will choke on anything that
+        # isn't ASCII.
+        print(event['DESCRIPTION'])
+
+    if 'COMMENT' in event:
+        print()
+        print("Comment:")
+        print(event['COMMENT'])
+
+    print()
+
+
 def main():
     cal = icalendar.Calendar.from_ical(sys.stdin.read())
     if 'METHOD' in cal:
@@ -278,42 +324,7 @@ def main():
 
     for event in cal.subcomponents:
         if event.name == 'VEVENT':
-            if 'CLASS' in event and event['CLASS'] != 'PUBLIC':
-                print("Classification: %s" % event['CLASS'])
-            if 'STATUS' in event and event['STATUS'] != 'CONFIRMED':
-                print("Status:    %s" % event['STATUS'])
-            if 'ORGANIZER' in event:
-                print("Organizer: %s" % format_person(event['ORGANIZER']))
-
-            if 'SUMMARY' in event:
-                print("Event:     %s" % event['SUMMARY'])
-            elif 'UID' in event:
-                print('UID:       %s' % event['UID'])
-
-            if 'DTSTART' in event:
-                handle_event_dtstart(event)
-            if 'RRULE' in event:
-                handle_event_rrule(event)
-            if 'URL' in event:
-                print("URL:       %s" % event['URL'])
-            if 'LOCATION' in event:
-                print("Location:  %s" % event['LOCATION'])
-            if 'CONTACT' in event:
-                print("Contact:   %s" % event['CONTACT'])
-            if 'ATTENDEE' in event:
-                if isinstance(event['ATTENDEE'], list):
-                    print("Attendees: %s" % format_person(event['ATTENDEE'][0]))
-                    for attendee in event['ATTENDEE'][1:]:
-                        print("           %s" % format_person(attendee))
-                else:
-                    print("Attendee:  %s" % format_person(event['ATTENDEE']))
-
-            if 'DESCRIPTION' in event:
-                print("Description:")
-                # If the encode() call isn't there, print() will choke on anything that
-                # isn't ASCII.
-                print(event['DESCRIPTION'])
-            print()
+            handle_event_vevent(event)
 
 
 if __name__ == '__main__':
