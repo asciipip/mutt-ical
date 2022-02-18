@@ -4,6 +4,7 @@ import datetime
 import os
 import re
 import sys
+import textwrap
 
 import icalendar  # https://pypi.python.org/pypi/icalendar
 import pytz  # https://pypi.python.org/pypi/pytz
@@ -194,8 +195,7 @@ def handle_event_component_dtstart(event):
             # We have an end date and time.
             if dtstart.date() == dtend.date():
                 # Start end end times are on the same day.
-                # This is a common occurence, so let's format things in a
-                # friendly way.
+                # This is a common occurence, so let's format things in a friendly way.
                 print("Date:      %s" % format_date(dtstart))
                 print("Starts:    %s" % format_time(dtstart))
                 print("Ends:      %s" % format_time(dtend))
@@ -305,9 +305,17 @@ def handle_event_vevent(event):
 
     if 'DESCRIPTION' in event:
         print("Description:")
-        # If the encode() call isn't there, print() will choke on anything that
-        # isn't ASCII.
+        # If the encode() call isn't there, print() will choke on anything that isn't ASCII.
         print(event['DESCRIPTION'])
+
+    if 'COMMENT' in event:
+        print()
+        print('Comment:   ', end='')
+        comment = event['COMMENT']
+        comment = textwrap.fill(comment, width=96, replace_whitespace=False, drop_whitespace=False)
+        comment = textwrap.indent(comment, '           ')
+        print(comment[11:])
+
     print()
 
 
