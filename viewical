@@ -170,7 +170,11 @@ def get_display_columns():
     return 80
 
 
-cal = icalendar.Calendar.from_ical(sys.stdin.read())
+try:
+    cal = icalendar.Calendar.from_ical(sys.stdin.read())
+except ValueError as e:
+    print('Unable to parse iCalendar file:', str(e), file=sys.stderr)
+    exit(1)
 if 'METHOD' in cal:
     if cal['METHOD'] == 'PUBLISH':
         print('=== Publication ===')
