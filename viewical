@@ -312,8 +312,6 @@ for event in cal.subcomponents:
             print(comment[field_width:])
         if 'DESCRIPTION' in event:
             print("Description:")
-            # If the encode() call isn't there, print() will choke on anything that
-            # isn't ASCII.
             print(event['DESCRIPTION'])
 
         print()
