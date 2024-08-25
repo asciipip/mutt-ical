@@ -4,6 +4,7 @@ import datetime
 import os
 import re
 import sys
+import textwrap
 
 import icalendar  # https://pypi.python.org/pypi/icalendar
 import pytz       # https://pypi.python.org/pypi/pytz
@@ -156,7 +157,18 @@ def format_recur_byday(weekdaynum):
     if sign == '-':
         nth = '-' + nth
     return 'the {} {}'.format(nth, day)
-        
+
+def get_display_columns():
+    if 'COLUMNS' in os.environ:
+        return int(os.environ['COLUMNS'])
+    if 'TERMCAP' in os.environ:
+        termcap = os.environ['TERMCAP']
+        tc_fields = termcap.split(':')
+        col_fields = [f for f in tc_fields if f.startswith('co#')]
+        if len(col_fields) == 1:
+            return int(col_fields[0].split('#')[1])
+    return 80
+
 
 cal = icalendar.Calendar.from_ical(sys.stdin.read())
 if 'METHOD' in cal:
@@ -282,9 +294,26 @@ for event in cal.subcomponents:
                     print("           %s" % format_person(attendee))
             else:
                 print("Attendee:  %s" % format_person(event['ATTENDEE']))
+        if 'COMMENT' in event:
+            field_header = 'Comment:   '
+            print(field_header, end='')
+            # Comments might sometimes be longer than will fit
+            # horizontally on screen.  Let's wrap the text to be a little
+            # more readable.
+            columns = get_display_columns()
+            field_width = len(field_header)
+            text_width = columns - field_width
+            comment = textwrap.fill(
+                event['COMMENT'],
+                width=text_width,
+                replace_whitespace=False,
+                drop_whitespace=False)
+            comment = textwrap.indent(comment, ' ' * field_width)
+            print(comment[field_width:])
         if 'DESCRIPTION' in event:
             print("Description:")
             # If the encode() call isn't there, print() will choke on anything that
             # isn't ASCII.
             print(event['DESCRIPTION'])
+
         print()
