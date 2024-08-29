@@ -190,6 +190,63 @@ def format_recur_byday(weekdaynum):
     nth = ordinal(int(match.group(1)))
     return 'the {} {}'.format(nth, day)
 
+def format_rrule(rrule):
+    interval = ""
+    freq = ""
+    days = ""
+    count = ""
+    until = ""
+
+    if 'INTERVAL' in rrule:
+        try:
+            interval_num = int(rrule['INTERVAL'][0])
+            if interval_num == 1:
+                interval = ''
+            elif interval_num == 2:
+                interval = 'other '
+            else:
+                interval = ordinal(interval_num) + ' '
+        except ValueError:
+            interval = rrule['INTERVAL'][0]
+    if 'FREQ' in rrule:
+        if rrule['FREQ'][0] in FREQ_UNITS:
+            freq_unit = FREQ_UNITS[rrule['FREQ'][0]]
+            freq = 'Every %s%s' % (interval, freq_unit)
+        else:
+            freq_unit = rrule['FREQ'][0][:-2].lower()
+            freq = '%s, with an interval of %s' % (rrule['FREQ'][0], rrule['INTERVAL'])
+    else:
+        freq_unit = 'interval'
+        freq = 'Every <unknown interval>'
+    if 'BYDAY' in rrule:
+        days = 'on ' + comma_list([format_recur_byday(d) for d in rrule['BYDAY']])
+    if 'BYMONTH' in rrule:
+        monthname = comma_list([format_recur_bymonth(d) for d in rrule['BYMONTH']])
+    else:
+        monthname = 'the month'
+    if 'BYMONTHDAY' in rrule:
+        if days == '':
+            days = 'on '
+        else:
+            days += '; and '
+        days += 'the ' \
+            + comma_list([format_recur_bymonthday(d) for d in rrule['BYMONTHDAY']]) \
+            + ' of ' \
+            + monthname
+    elif 'BYMONTH' in rrule:
+        if days != '':
+            days += ' '
+        days += 'in ' + monthname
+    if 'COUNT' in rrule:
+        count = 'for %s %s' % (rrule['COUNT'][0], freq_unit + 's')
+    if 'UNTIL' in rrule:
+        if isinstance(rrule['UNTIL'][0], datetime.datetime):
+            until = "until %s" % format_datetime(rrule['UNTIL'][0])
+        else:
+            until = "until %s" % format_date(rrule['UNTIL'][0])
+
+    return ' '.join([x for x in [freq, days, count, until] if (x and len(x) > 0)])
+
 def get_display_columns():
     if 'COLUMNS' in os.environ:
         return int(os.environ['COLUMNS'])
@@ -271,64 +328,7 @@ for event in cal.subcomponents:
                     print("Date:      %s" % format_date(dtstart))
 
         if 'RRULE' in event:
-            rrule = event['RRULE']
-            interval = ""
-            freq = ""
-            days = ""
-            count = ""
-            until = ""
-
-            if 'INTERVAL' in rrule:
-                try:
-                    interval_num = int(rrule['INTERVAL'][0])
-                    if interval_num == 1:
-                        interval = ''
-                    elif interval_num == 2:
-                        interval = 'other '
-                    else:
-                        interval = ordinal(interval_num) + ' '
-                except ValueError:
-                    interval = rrule['INTERVAL'][0]
-            if 'FREQ' in rrule:
-                if rrule['FREQ'][0] in FREQ_UNITS:
-                    freq_unit = FREQ_UNITS[rrule['FREQ'][0]]
-                    freq = 'Every %s%s' % (interval, freq_unit)
-                else:
-                    freq_unit = rrule['FREQ'][0][:-2].lower()
-                    freq = '%s, with an interval of %s' % (rrule['FREQ'][0], rrule['INTERVAL'])
-            else:
-                freq_unit = 'interval'
-                freq = 'Every <unknown interval>'
-            if 'BYDAY' in rrule:
-                days = 'on ' + comma_list([format_recur_byday(d) for d in rrule['BYDAY']])
-            if 'BYMONTH' in rrule:
-                monthname = comma_list([format_recur_bymonth(d) for d in rrule['BYMONTH']])
-            else:
-                monthname = 'the month'
-            if 'BYMONTHDAY' in rrule:
-                if days == '':
-                    days = 'on '
-                else:
-                    days += '; and '
-                days += 'the ' \
-                    + comma_list([format_recur_bymonthday(d) for d in rrule['BYMONTHDAY']]) \
-                    + ' of ' \
-                    + monthname
-            elif 'BYMONTH' in rrule:
-                if days != '':
-                    days += ' '
-                days += 'in ' + monthname
-            if 'COUNT' in rrule:
-                count = 'for %s %s' % (rrule['COUNT'][0], freq_unit + 's')
-            if 'UNTIL' in rrule:
-                if isinstance(rrule['UNTIL'][0], datetime.datetime):
-                    until = "until %s" % format_datetime(rrule['UNTIL'][0])
-                else:
-                    until = "until %s" % format_date(rrule['UNTIL'][0])
-
-            params = [x for x in [freq, days, count, until] if (x and len(x) > 0)]
-            print("Recurs:    %s" % ' '.join(params))
-
+            print("Recurs:    %s" % format_rrule(event['RRULE']))
         if 'URL' in event:
             print("URL:       %s" % event['URL'])
         if 'LOCATION' in event:
