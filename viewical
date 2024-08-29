@@ -32,6 +32,20 @@ DAY_NAMES = {
     'FR': 'Friday',
     'SA': 'Saturday',
 }
+MONTH_NAMES = {
+    1: 'January',
+    2: 'February',
+    3: 'March',
+    4: 'April',
+    5: 'May',
+    6: 'June',
+    7: 'July',
+    8: 'August',
+    9: 'September',
+    10: 'October',
+    11: 'November',
+    12: 'December',
+}
 
 # Get local timezone.  Use TZ environment variable if present, otherwise use
 # the tzlocal module to figure it out.
@@ -158,6 +172,14 @@ def format_person(person):
         display_name = email_address
     return display_status + display_name
 
+def format_recur_bymonth(monthnum):
+    if monthnum not in MONTH_NAMES:
+        return '[ERROR: failed to parse "BYMONTH={}"]'.format(monthnum)
+    return MONTH_NAMES[monthnum]
+
+def format_recur_bymonthday(monthdaynum):
+    return ordinal(monthdaynum)
+
 def format_recur_byday(weekdaynum):
     match = re.search(r'^([+-]?\d*)(..)$', weekdaynum)
     if match is None or match.group(2) not in DAY_NAMES:
@@ -279,6 +301,23 @@ for event in cal.subcomponents:
                 freq = 'Every <unknown interval>'
             if 'BYDAY' in rrule:
                 days = 'on ' + comma_list([format_recur_byday(d) for d in rrule['BYDAY']])
+            if 'BYMONTH' in rrule:
+                monthname = comma_list([format_recur_bymonth(d) for d in rrule['BYMONTH']])
+            else:
+                monthname = 'the month'
+            if 'BYMONTHDAY' in rrule:
+                if days == '':
+                    days = 'on '
+                else:
+                    days += '; and '
+                days += 'the ' \
+                    + comma_list([format_recur_bymonthday(d) for d in rrule['BYMONTHDAY']]) \
+                    + ' of ' \
+                    + monthname
+            elif 'BYMONTH' in rrule:
+                if days != '':
+                    days += ' '
+                days += 'in ' + monthname
             if 'COUNT' in rrule:
                 count = 'for %s %s' % (rrule['COUNT'][0], freq_unit + 's')
             if 'UNTIL' in rrule:
