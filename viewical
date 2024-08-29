@@ -69,7 +69,15 @@ def ordinal(integer):
         return '{}rd'.format(integer)
     else:
         return '{}th'.format(integer)
-                
+
+def comma_list(items):
+    if len(items) == 1:
+        return items[0]
+    elif len(items) == 2:
+        return '{} and {}'.format(*items)
+    elif len(items) >= 3:
+        return '{}, and {}'.format(', '.join(items[:-1]), items[-1])
+
 def get_dtend(event):
     if 'DTEND' in event:
         return event['DTEND'].dt
@@ -270,12 +278,7 @@ for event in cal.subcomponents:
                 freq_unit = 'interval'
                 freq = 'Every <unknown interval>'
             if 'BYDAY' in rrule:
-                if len(rrule['BYDAY']) == 1:
-                    days = 'on %s' % format_recur_byday(rrule['BYDAY'][0])
-                elif len(rrule['BYDAY']) == 2:
-                    days = 'on %s and %s' % (format_recur_byday(rrule['BYDAY'][0]), format_recur_byday(rrule['BYDAY'][1]))
-                elif len(rrule['BYDAY']) >= 3:
-                    days = 'on %s, and %s' % (', '.join(format_recur_byday(d) for d in rrule['BYDAY'][:-1]), format_recur_byday(rrule['BYDAY'][-1]))
+                days = 'on ' + comma_list([format_recur_byday(d) for d in rrule['BYDAY']])
             if 'COUNT' in rrule:
                 count = 'for %s %s' % (rrule['COUNT'][0], freq_unit + 's')
             if 'UNTIL' in rrule:
