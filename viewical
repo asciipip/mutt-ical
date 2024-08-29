@@ -43,6 +43,15 @@ else:
 
 def ordinal(integer):
     """Converts an integer (e.g. "5") into an ordinal (e.g. "5th")."""
+    # Handle negative numbers separately
+    if integer < 0:
+        if integer == -1:
+            return "last"
+        if integer == -2:
+            return "penultimate"
+        else:
+            # FIXME: COuld probably have better wording here.
+            return "-" + ordinal(abs(integer))
     # *Most* suffixes are based on the last digit of the number:
     #  * 1st
     #  * 2nd
@@ -142,20 +151,13 @@ def format_person(person):
     return display_status + display_name
 
 def format_recur_byday(weekdaynum):
-    match = re.search(r'^([+-]?)(\d*)(..)$', weekdaynum)
-    if match is None or match.group(3) not in DAY_NAMES:
+    match = re.search(r'^([+-]?\d*)(..)$', weekdaynum)
+    if match is None or match.group(2) not in DAY_NAMES:
         return '[ERROR: failed to parse "BYDAY={}"]'.format(weekdaynum)
-    day = DAY_NAMES[match.group(3)]
-    if match.group(2) is None or match.group(2) == "":
-        return day
+    day = DAY_NAMES[match.group(2)]
     if match.group(1) is None or match.group(1) == "":
-        sign = '+'
-    else:
-        sign = match.group(1)
-    nth = ordinal(int(match.group(2)))
-    # FIXME: There should be a better way of wording negative numbers
-    if sign == '-':
-        nth = '-' + nth
+        return day
+    nth = ordinal(int(match.group(1)))
     return 'the {} {}'.format(nth, day)
 
 def get_display_columns():
