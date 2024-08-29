@@ -12,7 +12,7 @@ import tzlocal    # https://pypi.python.org/pypi/tzlocal
 
 TIME_FORMAT = '%-I:%M %P'
 DATE_FORMAT = '%A, %B %-d, %Y'
-DATETIME_FORMAT = "%s %s" % (DATE_FORMAT , TIME_FORMAT)
+DATETIME_FORMAT = "%s %s" % (DATE_FORMAT, TIME_FORMAT)
 
 FREQ_UNITS = {
     'SECONDLY': 'second',
@@ -125,8 +125,13 @@ def format_date(dt):
     return dtlocal.strftime(DATE_FORMAT)
 
 def format_datetime(dt):
-    dtlocal = localize(dt)
-    return dtlocal.strftime(DATETIME_FORMAT)
+    return '{} at {}'.format(format_date(dt), format_time(dt))
+
+def format_date_or_datetime(dt):
+    if isinstance(dt, datetime.datetime):
+        return format_datetime(dt)
+    else:
+        return format_date(dt)
 
 def format_person(person):
     if 'ROLE' in person.params:
@@ -329,6 +334,26 @@ for event in cal.subcomponents:
 
         if 'RRULE' in event:
             print("Recurs:    %s" % format_rrule(event['RRULE']))
+        if 'RDATE' in event:
+            if type(event['RDATE']) is list:
+                rdates = []
+                for rd in event['RDATE']:
+                    rdates.extend(rd.dts)
+            else:
+                rdates = event['RDATE'].dts
+            print("Also:      %s" % format_date_or_datetime(rdates[0].dt))
+            for rdate in rdates[1:]:
+                print("           %s" % format_date_or_datetime(rdate.dt))
+        if 'EXDATE' in event:
+            if type(event['EXDATE']) is list:
+                exdates = []
+                for ed in event['EXDATE']:
+                    exdates.extend(ed.dts)
+            else:
+                exdates = event['EXDATE'].dts
+            print("Except:    Not %s" % format_date_or_datetime(exdates[0].dt))
+            for exdate in exdates[1:]:
+                print("           Not %s" % format_date_or_datetime(exdate.dt))
         if 'URL' in event:
             print("URL:       %s" % event['URL'])
         if 'LOCATION' in event:
