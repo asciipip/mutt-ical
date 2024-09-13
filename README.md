@@ -10,19 +10,20 @@ OSX calendar program.)
   [mutt]: http://www.mutt.org
 
 
+Installation
+------------
+
+ 1. Install [Poetry](https://python-poetry.org/)
+ 2. Run `poetry build`
+ 3. Install the `.whl` file in the `dist` directory
+
+
 viewical
 --------
 
 `viewical` takes an iCalendar file on standard input and prints out a more
 human-friendly rendering of the data in the file.  It's intended to be
 used as a display filter in mutt.
-
-### Requirements
-
-* Python
-* [python-icalendar](http://icalendar.readthedocs.org/)
-* [pytz](http://pythonhosted.org/pytz/)
-* [tzlocal](https://github.com/regebro/tzlocal)
 
 ### Usage
 
@@ -33,8 +34,8 @@ in your `~/.muttrc`:
 
 In your mailcap, add entries for the appropriate MIME types:
 
-    text/calendar; /path/to/viewical; copiousoutput
-    application/ics; /path/to/viewical; copiousoutput
+    text/calendar; viewical; copiousoutput
+    application/ics; viewical; copiousoutput
 
 In your `.muttrc`, tell mutt to automatically display calendar data:
 

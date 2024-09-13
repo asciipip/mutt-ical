@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "mutt-ical"
+version = "2.0.0-rc"
+description = ""
+authors = ["Pip Gold <pip@aperiodic.net>"]
+readme = "README.md"
+packages = [{include = "mutt_ical"}]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+icalendar = ">=1.0"
+tzlocal = ">=3.0"
+
+[tool.poetry.scripts]
+viewical = "mutt_ical.viewical:main"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
