@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "mutt-ical"
-version = "2.0.0-rc"
+version = "2.0.0"
 description = ""
 authors = ["Pip Gold <pip@aperiodic.net>"]
 readme = "README.md"
