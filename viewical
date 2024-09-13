@@ -5,9 +5,9 @@ import os
 import re
 import sys
 import textwrap
+import zoneinfo
 
 import icalendar  # https://pypi.python.org/pypi/icalendar
-import pytz       # https://pypi.python.org/pypi/pytz
 import tzlocal    # https://pypi.python.org/pypi/tzlocal
 
 TIME_FORMAT = '%-I:%M %P'
@@ -49,10 +49,11 @@ MONTH_NAMES = {
 
 # Get local timezone.  Use TZ environment variable if present, otherwise use
 # the tzlocal module to figure it out.
-if 'TZ' in os.environ:
-    tz = pytz.timezone(os.environ['TZ'])
-else:
-    tz = tzlocal.get_localzone()
+def get_local_timezone():
+    if 'TZ' in os.environ:
+        return zoneinfo.ZoneInfo(os.environ['TZ'])
+    else:
+        return tzlocal.get_localzone()
 
 
 def ordinal(integer):
@@ -101,11 +102,11 @@ def get_dtend(event):
 def localize(dt):
     """Take a datetime in an arbitrary timezone and return it in the local
     timezone."""
-    global tz
+    tz = get_local_timezone()
     if dt.tzinfo:
         return dt.astimezone(tz)
     else:
-        return tz.localize(dt)
+        return dt.replace(tzinfo=tz)
 
 def format_time(dt):
     dtlocal = localize(dt)
