@@ -13,6 +13,20 @@ OSX calendar program.)
 Installation
 ------------
 
+The recommended installation method is to use [`pipx`][pipx] to install the
+module:
+
+    pipx install mutt-ical
+
+  [pipx]: https://pipx.pypa.io/
+
+You can also use `pip`, which will mingle the module in to the current
+Python environment:
+
+    pip install mutt-ical
+
+For manual installation:
+
  1. Install [Poetry](https://python-poetry.org/)
  2. Run `poetry build`
  3. Install the `.whl` file in the `dist` directory
