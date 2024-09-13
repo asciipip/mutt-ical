@@ -20,16 +20,21 @@ module:
 
   [pipx]: https://pipx.pypa.io/
 
-You can also use `pip`, which will mingle the module in to the current
+You can also use `pip`, which will mingle the module into the current
 Python environment:
 
     pip install mutt-ical
 
-For manual installation:
+Or you can download the `.whl` file from the [latest release][].
+
+  [latest release]: https://github.com/asciipip/mutt-ical/releases
+
+Finally, there's the manual option:
 
  1. Install [Poetry](https://python-poetry.org/)
- 2. Run `poetry build`
- 3. Install the `.whl` file in the `dist` directory
+ 2. Clone this repository (`git clone https://github.com/asciipip/mutt-ical.git`)
+ 3. In the cloned repo, run `poetry build`
+ 4. Install the `.whl` file from the `dist` directory
 
 
 viewical
@@ -128,3 +133,15 @@ ical-reply
 
 `ical-reply` is intended to facilitate responses to iCalendar emails.
 It's not ready for use yet.
+
+
+Release Process
+---------------
+
+ * Update changelog
+ * Update version number in `pyproject.toml`
+ * Commit changes
+ * Add release version tag
+ * `poetry build`
+ * `poetry publish`
+ * Make a release on GitHub, attaching the wheel and tar files in `dist`
