@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "mutt-ical"
-version = "2.0.1"
+version = "2.0.2"
 description = "Scripts for helping mutt deal with iCalendar data"
 authors = ["Pip Gold <pip@aperiodic.net>"]
 readme = "README.md"
