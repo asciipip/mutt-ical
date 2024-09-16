@@ -4,13 +4,9 @@ version = "2.0.1"
 description = "Scripts for helping mutt deal with iCalendar data"
 authors = ["Pip Gold <pip@aperiodic.net>"]
 readme = "README.md"
-license = "LICENSE"
+license = "GPL-3.0-or-later"
 packages = [{include = "mutt_ical"}]
-
-[project.urls]
-Repository = "https://github.com/asciipip/mutt-ical"
-Issues = "https://github.com/asciipip/mutt-ical/issues"
-Changelog = "https://github.com/asciipip/mutt-ical/blob/master/CHANGELOG.md"
+repository = "https://github.com/asciipip/mutt-ical"
 
 [tool.poetry.dependencies]
 python = "^3.9"
