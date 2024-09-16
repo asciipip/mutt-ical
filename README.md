@@ -9,6 +9,14 @@ OSX calendar program.)
   [iCalendar]: https://en.wikipedia.org/wiki/iCalendar
   [mutt]: http://www.mutt.org
 
+The scripts include the following programs, which are described in more
+detail further down:
+
+ * `viewical` – Prints out a text summary of the events in an iCalendar
+   file.
+ * `ical-reply` – Intended to facilitate responses to iCalendar email
+   invitations.  Not yet functional.
+
 
 Installation
 ------------
